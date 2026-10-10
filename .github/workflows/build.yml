@@ -2,27 +2,33 @@ name: Build Plugin
 on: [push, workflow_dispatch]
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Setup MinGW
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
+      
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
 
       - name: Download BakkesMod SDK
         run: |
           curl -sL "https://github.com" -o sdk.zip
           powershell Expand-Archive -Path "sdk.zip" -DestinationPath "sdk"
 
-      - name: Compile DLL
+      - name: Create Solution and Project Files
         run: |
-          g++ -shared -o FreestylePack.dll FreestylePack/FreestylePack.cpp -I"sdk/include" -L"sdk/lib" -lbakkesmodsdk -static-libgcc -static-libstdc++
+          git clone https://github.com template
+          xcopy /E /I /Y template\* .
+          if (Test-Path "FreestylePack/FreestylePack.cpp") {
+            Move-Item -Path "FreestylePack/FreestylePack.cpp" -Destination "BakkesModPluginTemplate/BakkesModPluginTemplate.cpp" -Force
+          }
 
+      - name: Build Plugin DLL
+        run: |
+          msbuild BakkesModPluginTemplate.sln /p:Configuration=Release /p:Platform=x64 /p:BakkesModPath="${{ github.workspace }}/sdk"
+          
       - name: Upload Finished DLL
         uses: actions/upload-artifact@v4
         with:
           name: FreestylePackPlugin
-          path: FreestylePack.dll
+          path: x64/Release/BakkesModPluginTemplate.dll
