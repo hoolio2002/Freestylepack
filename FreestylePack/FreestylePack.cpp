@@ -69,4 +69,7 @@ public:
     }
 };
 
-BAKKESMOD_PLUGIN(FreestylePackPlugin, "Freestyle Tools Pack", "1.0", PLUGIN_FREEPLAY)
+extern "C" __declspec(dllexport) BakkesModPlugin* GetPlugin() {
+    static FreestylePackPlugin plugin;
+    return &plugin;
+}
