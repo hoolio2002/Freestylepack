@@ -6,18 +6,20 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-      
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup MinGW
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
 
       - name: Download BakkesMod SDK
         run: |
-          Invoke-WebRequest -Uri "https://github.com" -OutFile "sdk.zip"
-          Expand-Archive -Path "sdk.zip" -DestinationPath "sdk"
+          curl -sL "https://github.com" -o sdk.zip
+          powershell Expand-Archive -Path "sdk.zip" -DestinationPath "sdk"
 
       - name: Compile DLL
         run: |
-          cl.exe /LD /EHsc /O2 /I"sdk/include" FreestylePack/FreestylePack.cpp /link /LIBPATH:"sdk/lib" bakkesmodsdk.lib /OUT:FreestylePack.dll
+          g++ -shared -o FreestylePack.dll FreestylePack/FreestylePack.cpp -I"sdk/include" -L"sdk/lib" -lbakkesmodsdk -static-libgcc -static-libstdc++
 
       - name: Upload Finished DLL
         uses: actions/upload-artifact@v4
