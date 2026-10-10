@@ -1,0 +1,26 @@
+name: Build Plugin
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Download BakkesMod SDK
+        run: |
+          Invoke-WebRequest -Uri "https://github.com" -OutFile "sdk.zip"
+          Expand-Archive -Path "sdk.zip" -DestinationPath "sdk"
+
+      - name: Compile DLL
+        run: |
+          cl.exe /LD /EHsc /O2 /I"sdk/include" FreestylePack/FreestylePack.cpp /link /LIBPATH:"sdk/lib" bakkesmodsdk.lib /OUT:FreestylePack.dll
+
+      - name: Upload Finished DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: FreestylePackPlugin
+          path: FreestylePack.dll
