@@ -3,6 +3,9 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: windows-2022
+    defaults:
+      run:
+        shell: cmd
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -19,13 +22,13 @@ jobs:
         run: |
           git clone https://github.com template
           xcopy /E /I /Y template\* .
-          if (Test-Path "FreestylePack/FreestylePack.cpp") {
-            Move-Item -Path "FreestylePack/FreestylePack.cpp" -Destination "BakkesModPluginTemplate/BakkesModPluginTemplate.cpp" -Force
-          }
+          if exist "FreestylePack\FreestylePack.cpp" (
+              move /Y "FreestylePack\FreestylePack.cpp" "BakkesModPluginTemplate\BakkesModPluginTemplate.cpp"
+          )
 
       - name: Build Plugin DLL
         run: |
-          msbuild BakkesModPluginTemplate.sln /p:Configuration=Release /p:Platform=x64 /p:BakkesModPath="${{ github.workspace }}/sdk"
+          msbuild BakkesModPluginTemplate.sln /p:Configuration=Release /p:Platform=x64 /p:BakkesModPath="%CD%\sdk"
           
       - name: Upload Finished DLL
         uses: actions/upload-artifact@v4
